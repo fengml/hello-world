@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fsl.dao.ITestTestDao">
+	
+	<resultMap id="resultMap" type="com.fsl.model.TestTest">
+            <result property="id" column="id" />
+            <result property="name" column="name" />
+            <result property="number" column="number" />
+
+	</resultMap>
+	
+	<resultMap id="resultDetailMap" type="com.fsl.model.TestTest">
+            <result property="id" column="id" />
+            <result property="name" column="name" />
+            <result property="number" column="number" />
+
+	<!-- 
+	  <association property="creatorUser" column="creator" select="com.jc.psbc_3cis.dao.IUserDao.getBaseObject">
+	  </association>
+	  <association property="updatorUser" column="updator" select="com.jc.psbc_3cis.dao.IUserDao.getBaseObject">
+	  </association>
+	 -->
+	</resultMap>
+	
+	<sql id="baseCol">
+        id,name,number
+
+	</sql>
+
+	<sql id="pageSql">
+		<if test="__start !=null and __size!=null"><![CDATA[ limit #{__start},#{__size} ]]></if>
+	</sql>
+
+	<sql id="whereSql">
+		<trim prefix="WHERE" prefixOverrides="and |or ">
+            <if test="id != null"><![CDATA[ and id = #{id} ]]></if>
+            <if test="id_r_min != null"><![CDATA[ and id >= #{id_r_min} and id <= #{id_r_max} ]]></if>
+            <if test="id_enum != null">
+                <![CDATA[ and id in ]]>
+                <foreach collection="id_enum" item="value" open="(" separator="," close=")">
+                    <![CDATA[ #{value} ]]>
+                </foreach>
+            </if>
+            <if test="name != null"><![CDATA[ and  name = #{name:VARCHAR}]]></if>
+            <if test="name_r_min != null"><![CDATA[ and name >= #{name_r_min} and name <= #{name_r_max} ]]></if>
+            <if test="name_enum != null">
+                <![CDATA[ and name in ]]>
+                <foreach collection="name_enum" item="value" open="(" separator="," close=")">
+                    <![CDATA[ #{value} ]]>
+                </foreach>
+            </if>
+            <if test="number != null"><![CDATA[ and  number = #{number:NUMERIC}]]></if>
+            <if test="number_r_min != null"><![CDATA[ and number >= #{number_r_min} and number <= #{number_r_max} ]]></if>
+            <if test="number_enum != null">
+                <![CDATA[ and number in ]]>
+                <foreach collection="number_enum" item="value" open="(" separator="," close=")">
+                    <![CDATA[ #{value} ]]>
+                </foreach>
+            </if>
+
+		</trim>
+	</sql>
+
+	<sql id="orderSql">
+		<trim prefix="ORDER BY" suffixOverrides=",">
+            <if test="_orderBy == 'id_desc'"><![CDATA[ id desc, ]]></if>
+            <if test="_orderBy == 'id_asc'"><![CDATA[ id, ]]></if>
+            <if test="_orderBy == 'name_desc'" ><![CDATA[ name desc, ]]></if>
+            <if test="_orderBy == 'name_asc'" ><![CDATA[ name, ]]></if>
+            <if test="_orderBy == 'number_desc'" ><![CDATA[ number desc, ]]></if>
+            <if test="_orderBy == 'number_asc'" ><![CDATA[ number, ]]></if>
+            <if test="_orderBy_enum != null">
+                <foreach collection="_orderBy_enum" item="orderItem" open="" separator="," close="">
+                    <if test="orderItem == 'id_desc'"><![CDATA[ id desc ]]></if>
+                    <if test="orderItem == 'id_asc'"><![CDATA[ id ]]></if>
+                    <if test="orderItem == 'name_desc'" ><![CDATA[ name desc ]]></if>
+                    <if test="orderItem == 'name_asc'" ><![CDATA[ name ]]></if>
+                    <if test="orderItem == 'number_desc'" ><![CDATA[ number desc ]]></if>
+                    <if test="orderItem == 'number_asc'" ><![CDATA[ number ]]></if>
+                </foreach>
+            </if>
+
+		</trim>
+	</sql>
+
+	<sql id="updateSetSql">
+		<trim prefix="set" prefixOverrides="and">
+            <if test="name != null" ><![CDATA[ and  name = #{name}]]></if>
+            <if test="number != null" ><![CDATA[ and  number = #{number}]]></if>
+
+		</trim>
+	</sql>	
+
+	<insert id="insertObject" parameterType="com.fsl.model.TestTest">
+		<selectKey resultType="Long" keyProperty="id" order="AFTER">
+		 SELECT	LAST_INSERT_ID()
+	 	</selectKey>
+	 	insert into TEST( id,name,number ) values (#{id},#{name},#{number} )
+	</insert>
+
+	<update id="updateObject" parameterType="com.fsl.model.TestTest">
+		update TEST set name=#{name},number=#{number} where id=#{id}
+	</update>
+	
+	<update id="updateObjectByFields" parameterType="com.fsl.dao.QueryParams">
+		UPDATE TEST 
+		<include refid="updateSetSql" />
+		where id=#{id};
+  	</update> 
+	
+	<delete id="deleteObject" parameterType="long">
+		DELETE FROM TEST WHERE id = #{id}
+  	</delete>
+
+	<delete id="deleteObjectByWhere" parameterType="com.fsl.dao.QueryParams">
+		DELETE FROM TEST
+		<include refid="whereSql" />
+	</delete>
+
+	<select id="getBaseObject" parameterType="long" resultMap="resultMap">
+		select 
+		<include refid="baseCol" />
+		from TEST where id=#{id};
+	</select>
+
+	<select id="getDetailObject" parameterType="long" resultMap="resultDetailMap">
+		select * from TEST where id=#{id};
+	</select>
+	
+	<select id="queryCount" parameterType="com.fsl.dao.QueryParams" resultType="int">
+		select count(*) from TEST
+		  <include refid="whereSql" />
+	</select>
+	
+	<select id="queryBaseList" parameterType="com.fsl.dao.QueryParams" resultMap="resultMap">
+		select 
+		<include refid="baseCol" />
+		from TEST
+			<include refid="whereSql" />
+		  <include refid="orderSql" />
+		<include refid="pageSql" />
+	</select>
+
+	<select id="queryDetailList" parameterType="com.fsl.dao.QueryParams" resultMap="resultDetailMap">
+		select * from TEST
+			<include refid="whereSql" />
+		  <include refid="orderSql" />
+		<include refid="pageSql" />
+	</select>
+</mapper>
+

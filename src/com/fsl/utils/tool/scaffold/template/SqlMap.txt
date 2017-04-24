@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="${daoImplPath}">
+	
+	<resultMap id="resultMap" type="${clzNameLC}">
+${resultMap}
+	</resultMap>
+	
+	<resultMap id="resultDetailMap" type="${clzNameLC}">
+${resultMap}
+	<!-- 
+	  <association property="creatorUser" column="creator" select="com.jc.psbc_3cis.dao.IUserDao.getBaseObject">
+	  </association>
+	  <association property="updatorUser" column="updator" select="com.jc.psbc_3cis.dao.IUserDao.getBaseObject">
+	  </association>
+	 -->
+	</resultMap>
+	
+	<sql id="baseCol">
+${baseCol}
+	</sql>
+
+	<sql id="pageSql">
+		<if test="__start !=null and __size!=null"><![CDATA[ limit #{__start},#{__size} ]]></if>
+	</sql>
+
+	<sql id="whereSql">
+		<trim prefix="WHERE" prefixOverrides="and |or ">
+${whereSql}
+		</trim>
+	</sql>
+
+	<sql id="orderSql">
+		<trim prefix="ORDER BY" suffixOverrides=",">
+${orderSql}
+		</trim>
+	</sql>
+
+	<sql id="updateSetSql">
+		<trim prefix="set" prefixOverrides="and">
+${updateSetSql}
+		</trim>
+	</sql>	
+
+	<insert id="insertObject" parameterType="${clzNameLC}">
+		<selectKey resultType="Long" keyProperty="id" order="AFTER">
+		 SELECT	LAST_INSERT_ID()
+	 	</selectKey>
+	 	${insertStatement}
+	</insert>
+
+	<update id="updateObject" parameterType="${clzNameLC}">
+		${updateStatement}
+	</update>
+	
+	<update id="updateObjectByFields" parameterType="${queryParams}">
+		UPDATE ${tblName} 
+		<include refid="updateSetSql" />
+		where id=#{id};
+  	</update> 
+	
+	<delete id="deleteObject" parameterType="long">
+		DELETE FROM ${tblName} WHERE ${primaryKey} = #{id}
+  	</delete>
+
+	<delete id="deleteObjectByWhere" parameterType="${queryParams}">
+		DELETE FROM ${tblName}
+		<include refid="whereSql" />
+	</delete>
+
+	<select id="getBaseObject" parameterType="long" resultMap="resultMap">
+		select 
+		<include refid="baseCol" />
+		from ${tblName} where id=#{id};
+	</select>
+
+	<select id="getDetailObject" parameterType="long" resultMap="resultDetailMap">
+		select * from ${tblName} where id=#{id};
+	</select>
+	
+	<select id="queryCount" parameterType="${queryParams}" resultType="int">
+		select count(*) from ${tblName}
+		  <include refid="whereSql" />
+	</select>
+	
+	<select id="queryBaseList" parameterType="${queryParams}" resultMap="resultMap">
+		select 
+		<include refid="baseCol" />
+		from ${tblName}
+			<include refid="whereSql" />
+		  <include refid="orderSql" />
+		<include refid="pageSql" />
+	</select>
+
+	<select id="queryDetailList" parameterType="${queryParams}" resultMap="resultDetailMap">
+		select * from ${tblName}
+			<include refid="whereSql" />
+		  <include refid="orderSql" />
+		<include refid="pageSql" />
+	</select>
+</mapper>
+

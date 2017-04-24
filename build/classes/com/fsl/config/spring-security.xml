@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<b:beans xmlns="http://www.springframework.org/schema/security"  
+    xmlns:b="http://www.springframework.org/schema/beans"     
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"  
+    xsi:schemaLocation="     
+          http://www.springframework.org/schema/beans     
+          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd     
+          http://www.springframework.org/schema/security  
+          http://www.springframework.org/schema/security/spring-security-3.1.xsd">  
+ 
+    <!--首页不过滤 -->  
+    <http pattern="/inde2x.jsp" security="none" /> 
+     
+    <http auto-config="true">  
+        <!-- 登录配置 -->       
+        <form-login login-page="/login" authentication-failure-url="/login?err=true" default-target-url="/demo/list" username-parameter="j_username" password-parameter="j_password" login-processing-url="/j_spring_security_check"/>  
+          
+        <!-- 退出配置 -->  
+        <!--   
+            logout-url:退出请求地址。系统默认:j_spring_security_logout  
+            logout-success-url:退出成功，跳转地址连接。  
+            delete-cookies:删除 cookies 内容。  
+            success-handler-ref:退出回调接口。类需实现接口: LogoutSuccessHandler  
+            invalidate-session:如果设置为 true，用户的 Session 将会在退出时被失效。  
+         -->  
+        <logout logout-success-url="/index.html" invalidate-session="true"/>  
+          
+        <remember-me />  
+          
+        <!-- 自定义过滤器， 实现用户、角色、权限、资源的数据库管理 -->  
+        <custom-filter ref="iFilter" before="FILTER_SECURITY_INTERCEPTOR"/>  
+      
+    </http>  
+      
+    <!-- 自定义过滤器 -->  
+    <b:bean id="iFilter" class="com.fsl.security.SecurityInterceptorDemo">  
+        <b:property name="securityMetadataSource" ref="securityMetadataSource"/><!-- FilterInvocationSecurityMetadataSource 接口实现类 -->  
+        <b:property name="authenticationManager" ref="authenticationManager"/><!-- 鉴定管理类 -->  
+        <b:property name="accessDecisionManager" ref="accessDecisionManager"/><!-- AccessDecisionManager 接口实现类 -->  
+    </b:bean>   
+      
+    <!-- 鉴定管理类配置信息 -->  
+    <authentication-manager alias="authenticationManager"><!-- 鉴定管理类 -->  
+        <authentication-provider user-service-ref="userDetailsManager"><!-- 用户详情管理类 [UserDetailsService 接口 实现类] -->  
+            <password-encoder ref="passwdEcoder"><!-- 用户加密解密类  -->  
+                <salt-source user-property="username"/>  
+            </password-encoder>         
+        </authentication-provider>  
+    </authentication-manager>  
+      
+    <!-- 用户详细信息获取接口 -->  
+    <b:bean id="userDetailsManager" class="com.fsl.security.MyUserDetailService"/>  
+      
+    <!-- 访问决策器， 决定某个用户具体的角色，是否有足够的权限访问某个资源 -->  
+    <b:bean id="accessDecisionManager" class="com.fsl.security.CustomAccessDecisionManager"/>  
+      
+    <!-- 资源源数据定义， 将所有的资源和权限的对应关系建立起来，即定义某一资源可以被哪些角色去访问。-->  
+    <b:bean id="securityMetadataSource" class="com.fsl.security.CustomSecurityMetadataSource"/>  
+      
+    <!-- 用户详情管理类使用的加密方式 -->  
+    <b:bean id="passwdEcoder" class="org.springframework.security.authentication.encoding.Md5PasswordEncoder"/><!-- PasswordEncoder 密码接口 -->  
+ </b:beans>

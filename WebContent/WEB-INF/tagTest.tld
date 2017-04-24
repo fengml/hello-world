@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<taglib xmlns="http://java.sun.com/xml/ns/javaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd"
+    version="2.1">
+    
+    <tlib-version>1.1</tlib-version>  <!-- 标签版本号 -->
+    <short-name>fsl</short-name>  <!-- 标签前缀 -->
+	<uri>fsl</uri>	<!-- 命名空间 -->
+
+	<tag>
+		<!-- 标签描述 -->
+		<description> 标签描述 </description> 
+		<!-- 标签名 -->
+		<name>list</name> 
+		<!-- 此标签对应的类 -->
+		<tag-class>com.fsl.tag.TestTagSupport</tag-class> 
+		<!-- 定义标签体为空 -->
+		<!-- empty:表示没有标签体;scripless:表示带有标签体,但是没有脚本(任何java代码);JSP: 表示可以写java代码,但是只限复杂标签 -->
+		<body-content>empty</body-content>
+		<!-- 参数声明 -->  
+	    <attribute>
+	        <name>msg</name>
+	        <required>false</required>  <!-- 为true: 表示必须要赋值; false:表示可选的 -->
+	        <rtexprvalue>true</rtexprvalue> <!-- true: 表示可以动态赋值; false:表示不可以; -->
+	    </attribute>
+	    <attribute>
+	    	<name>count</name>
+	    	<required>false</required>
+	    	<rtexprvalue>true</rtexprvalue>
+	    </attribute>
+	</tag>
+	
+	<function>
+		<!-- El表达式调用名 -->
+		<name>hello</name>
+		<!-- 对应的执行类 -->
+		<function-class>com.fsl.tag.TestTagFunction</function-class>
+		<!-- 对应类中的对应执行方法 指定返回值类型 和 参数类型-->
+		<function-signature>java.lang.String hello(java.lang.String)</function-signature>
+	</function>
+	
+	<function>
+		<name>getDict</name>
+		<function-class>com.fsl.tag.TestTagFunction</function-class>
+		<function-signature>java.util.List getDict(java.lang.String,java.lang.String)</function-signature>
+	</function>
+
+
+
+</taglib>

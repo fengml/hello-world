@@ -1,0 +1,15 @@
+package ${pkgPath};
+
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.jc.psbc_3cis.controller.BaseController;
+
+@Controller
+@RequestMapping(value = "/${pkgName}")
+public class ${clzName}Controller extends BaseController 
+{	
+
+}
+

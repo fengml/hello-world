@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.fsl.dao.FileDao">
+	
+      
+	
+	<!-- 定义可以重用的代码 -->
+	<sql id="fileColumns">id,path</sql>
+
+	<resultMap type="com.fsl.entity.File" id="resultMap">
+		<id property="id" column="id"/>
+		<result property="path" column="path"/>
+	</resultMap>
+	
+	<resultMap type="com.fsl.entity.File" id="resultDetailMap">
+		<id property="id" column="id"/>
+		<result property="path" column="path"/>
+		
+		
+		<!-- 一对一的映射 -->
+		<!-- <association property="creatorUser" column="creator" select="com.jc.eschool.dao.IUserDao.getBaseObject">
+	    </association> -->
+		<!-- 一对多的映射 -->
+		<!-- <collection property="" ></collection> -->
+		
+	</resultMap>
+
+
+	<select id="getModelById" parameterType="int" resultType="com.fsl.entity.File">
+		select <include refid="fileColumns"/>
+		from file where id = #{id}
+	</select>
+	
+	<insert id="insert" parameterType="com.fsl.entity.File">
+	    <!-- 返回主键 -->
+		<selectKey resultType="Integer" keyProperty="id" order="AFTER">
+		   SELECT
+		   LAST_INSERT_ID()
+		</selectKey>
+		insert into file (path)
+		values(#{path})
+		
+	</insert>
+
+	<update id="Update" parameterType="com.fsl.entity.File">
+		update file
+		<set> <!-- set会自动将最后一个语句的逗号删除掉 -->
+			<if test="path != null">
+				path = #{path},
+			</if>
+		</set>
+		where id = #{id}
+	</update>
+	
+	<!-- 添加或者更新 -->										<!-- 返回主键: useGeneratedKeys="true" keyProperty="userId" -->
+	<insert id="addOrUpdate" parameterType="com.fsl.entity.File" useGeneratedKeys="true" keyProperty="id">
+		<if test="id == null">
+			insert into file(path)
+			values(${path})
+		</if>
+		<if test="id != null">
+			update file
+			<set>
+				<if test="path != null">
+					path = #{path},
+				</if>
+			</set>
+		</if>
+	</insert>
+
+	
+	<!-- ///////////////////////////////// -->
+	
+	
+	<!-- 动态SQL: 组合查询 -->
+	<select id="hightSearch" parameterType="map"  >
+		select cn_note_id,cn_note_title,cn_note_create_time
+		from cn_note
+		<where>
+			<if test="title!=null">
+				cn_note_title like #{title}
+			</if>
+			<if test="status!=null">
+				cn_note_status_id like #{status}
+			</if>
+			<if test="beginDate!=null">
+				cn_note_create_time >= #{beginDate}  <!-- 大于号可以直接被识别 -->
+			</if>
+			<if test="endDate!=null">
+				cn_note_create_time &lt;= #{endDate}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 动态更新,可以将不为null的属性更新到数据库 -->
+	<update id="dynamicUpdate"  >
+		update cn_note
+		<set> <!-- set会自动将最后一个语句的逗号删除掉 -->
+			<if test="cn_notebook_id != null">
+				cn_notebook_id = #{cn_notebook_id},
+			</if>
+			<if test="cn_note_title != null">
+				cn_note_title = #{cn_note_title},
+			</if>
+			<if test="cn_note_body != null">
+				cn_note_body = #{cn_note_body},
+			</if>
+			<if test="cn_user_id != null">
+				cn_user_id = #{cn_user_id},
+			</if>
+			<if test="cn_note_status_id != null">
+			    cn_note_status_id = #{cn_note_status_id},
+			</if>
+			<if test="cn_note_type_id != null">
+				cn_note_type_id = #{cn_note_type_id},
+			</if>
+			<if test="cn_note_create_time != null">
+				cn_note_create_time = #{cn_note_create_time},
+			</if>
+			<if test="cn_note_last_modify_time != null">
+				cn_note_last_modify_time = #{cn_note_last_modify_time}
+			</if>
+		</set>
+		where cn_note_id = #{cn_note_id}
+	</update>
+
+    <!-- 使用<foreach>实现笔记的批量删除 -->
+    <delete id="deleteNotes"> <!-- 注意:使用<foreach>,此时这里就不要再写parameterType,参数直接写在<foreach>的collection里面就行了-->
+    	delete from cn_note
+		where cn_note_id in
+		<!-- collection:就是我们传过来的数组,item:代表每一项,
+		     open和close就相当于是in后面的"("和")",
+		             这里也可以不要open和close,可以直接将"("写在in后面,将")"写在</foreach>后面
+		     separator:代表每一个元素间的间隔",";
+		     
+		     <foreach>就相当于下面这个sql语句中的in(2,3,4,5),
+		     delete from cn_note
+		     where cn_note_id in(2,3,4,5);
+		 -->
+		<foreach collection="array" item="id"
+		         open="(" close=")" separator=",">
+			#{id}
+		</foreach>
+    </delete>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

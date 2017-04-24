@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.fsl.dao.UserDao">
+
+	<resultMap type="com.fsl.entity.User" id="resultDetailMap">
+		<id property="id" column="id"/>
+		<result property="userName" column="username"/>
+		<result property="passWord" column="password"/>
+		<result property="fileId" column="fileId"/>
+		<association property="file" column="fileId" select="com.fsl.dao.FileDao.getModelById"></association>
+	</resultMap>
+
+	<select id="getModelById" parameterType="Integer" resultMap="resultDetailMap">
+		select * from user
+		where id = #{id}
+	</select>
+	
+	<insert id="insert" parameterType="com.fsl.entity.User">
+		insert into user (username,password,fileId)
+		values(#{userName},#{passWord},#{fileId})
+		
+	</insert>
+
+	<update id="Update" parameterType="com.fsl.entity.User">
+		update user
+		<set> <!-- set会自动将最后一个语句的逗号删除掉 -->
+			<if test="userName != null">
+				username = #{userName},
+			</if>
+			<if test="passWord != null">
+				password = #{passWord},
+			</if>
+			<if test="fileId != nul">
+				fileId = #{fileId}
+			</if>
+		</set>
+		where id = #{id}
+	</update>
+
+	<!-- 添加或者更新 -->										<!-- 返回主键: useGeneratedKeys="true" keyProperty="userId" -->
+	<insert id="addOrUpdate" parameterType="com.fsl.entity.User" useGeneratedKeys="true" keyProperty="id">
+		<if test="id == null">
+			insert into user (username,password,fileId)
+			values (#{userName},#{passWord},#{fileId})
+		</if>
+		<if test="id != null">
+			update user
+			<set>
+				<if test="userName != null">
+					username = #{userName},
+				</if>
+				<if test="passWord != null">
+					password = #{passWord},
+				</if>
+				<if test="fileId != null">
+					fileId = #{fileId},
+				</if>
+			</set>
+			where id = #{id}
+		</if>
+	</insert>
+
+	
+	<!-- ///////////////////////////////// -->
+	
+    <!-- 根据bookId查找所有的笔记 -->
+	<select id="findByBookId" parameterType="string"  >
+		select * from cn_note 
+		where cn_notebook_id = #{bookId}
+		order by cn_note_create_time desc
+	</select>
+	
+	<!-- 根君noteId查找对应的笔记 -->
+	<select id="findByNoteId" parameterType="string" resultType="map">
+		select cn_note_body,cn_note_title
+		from cn_note
+		where cn_note_id = #{noteId}
+	</select>
+	
+	<!-- 保存笔记 -->
+	<insert id="save"   >
+		insert into cn_note
+		values
+		(#{cn_note_id},#{cn_notebook_id},
+	     #{cn_user_id},#{cn_note_status_id},
+	     #{cn_note_type_id},#{cn_note_title},
+	     #{cn_note_body},#{cn_note_create_time},  
+	     #{cn_note_last_modify_time})		
+	</insert>
+	
+	<!-- 更新笔记 -->
+	<update id="update"  >
+		update cn_note
+		set cn_note_title = #{cn_note_title},
+		    cn_note_body = #{cn_note_body},
+		    cn_note_last_modify_time = #{cn_note_last_modify_time} 
+		where cn_note_id = #{cn_note_id};
+	</update>
+	
+	<!-- 更新 cn_note_status_id为'2',即相当于被删除放进回收站 -->
+	<update id="updateStatus" parameterType="string">
+		update cn_note
+		set cn_note_status_id = '2'
+		where cn_note_id = #{id}
+	</update>
+	
+	<!-- 更新 cn_note_status_id为'1',即相当于从回收站中撤销回来,并且修改其对应的新的bookId -->
+	<update id="updateStatus2" parameterType="map">
+		update cn_note
+		set cn_note_status_id = '1',cn_notebook_id = #{bookId}
+		where cn_note_id = #{noteId} 
+	</update>
+	
+	<!-- 查找指定的userId所有cn_note_status_id='2'的笔记,即被回收的笔记 -->
+	<select id="findRecycleNote" resultType="map">
+		select cn_note_title,cn_note_id
+		from cn_note
+		where cn_user_id = #{userId} and cn_note_status_id = '2'
+	</select>
+	
+	<!-- 根据指定的noteId删除对应的笔记 -->
+	<delete id="deleteByNoteId" parameterType="string">
+		delete from cn_note
+		where cn_note_id = #{cn_note_id}
+	</delete>
+	
+	
+	<!-- 动态SQL: 组合查询 -->
+	<select id="hightSearch" parameterType="map"  >
+		select cn_note_id,cn_note_title,cn_note_create_time
+		from cn_note
+		<where>
+			<if test="title!=null">
+				cn_note_title like #{title}
+			</if>
+			<if test="status!=null">
+				cn_note_status_id like #{status}
+			</if>
+			<if test="beginDate!=null">
+				cn_note_create_time >= #{beginDate}  <!-- 大于号可以直接被识别 -->
+			</if>
+			<if test="endDate!=null">
+				cn_note_create_time &lt;= #{endDate}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 动态更新,可以将不为null的属性更新到数据库 -->
+	<update id="dynamicUpdate"  >
+		update cn_note
+		<set> <!-- set会自动将最后一个语句的逗号删除掉 -->
+			<if test="cn_notebook_id != null">
+				cn_notebook_id = #{cn_notebook_id},
+			</if>
+			<if test="cn_note_title != null">
+				cn_note_title = #{cn_note_title},
+			</if>
+			<if test="cn_note_body != null">
+				cn_note_body = #{cn_note_body},
+			</if>
+			<if test="cn_user_id != null">
+				cn_user_id = #{cn_user_id},
+			</if>
+			<if test="cn_note_status_id != null">
+			    cn_note_status_id = #{cn_note_status_id},
+			</if>
+			<if test="cn_note_type_id != null">
+				cn_note_type_id = #{cn_note_type_id},
+			</if>
+			<if test="cn_note_create_time != null">
+				cn_note_create_time = #{cn_note_create_time},
+			</if>
+			<if test="cn_note_last_modify_time != null">
+				cn_note_last_modify_time = #{cn_note_last_modify_time}
+			</if>
+		</set>
+		where cn_note_id = #{cn_note_id}
+	</update>
+
+    <!-- 使用<foreach>实现笔记的批量删除 -->
+    <delete id="deleteNotes"> <!-- 注意:使用<foreach>,此时这里就不要再写parameterType,参数直接写在<foreach>的collection里面就行了-->
+    	delete from cn_note
+		where cn_note_id in
+		<!-- collection:就是我们传过来的数组,item:代表每一项,
+		     open和close就相当于是in后面的"("和")",
+		             这里也可以不要open和close,可以直接将"("写在in后面,将")"写在</foreach>后面
+		     separator:代表每一个元素间的间隔",";
+		     
+		     <foreach>就相当于下面这个sql语句中的in(2,3,4,5),
+		     delete from cn_note
+		     where cn_note_id in(2,3,4,5);
+		 -->
+		<foreach collection="array" item="id"
+		         open="(" close=")" separator=",">
+			#{id}
+		</foreach>
+    </delete>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

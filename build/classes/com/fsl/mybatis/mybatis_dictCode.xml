@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.fsl.dao.DictCodeDao">
+
+	<sql id="whereSql">
+        <trim prefix="WHERE" prefixOverrides="and |or ">
+            <if test="id != null"><![CDATA[ and id = #{id} ]]></if>
+            <if test="dictName != null"><![CDATA[ and dict_name = #{dictName} ]]></if>
+            <if test="itemCode != null"><![CDATA[ and item_code = #{itemCode} ]]></if>
+            <if test="itemDesc != null"><![CDATA[ and item_desc = #{itemDesc} ]]></if>
+        </trim>
+    </sql>
+
+	<resultMap type="com.fsl.entity.DictCode" id="resultDetailMap">
+		<id property="id" column="id"/>
+		<result property="dictName" column="dict_name"/>
+		<result property="itemCode" column="item_code"/>
+		<result property="itemDesc" column="item_desc"/>
+	</resultMap>
+
+	<select id="getBaseList" resultMap="resultDetailMap">
+		select * from dict_code
+	</select>
+	
+	<select id="getModelById" parameterType="Integer" resultMap="resultDetailMap">
+		select * from dict_code
+		where id = #{id}
+	</select>
+	
+	<select id="getModel" parameterType="com.fsl.entity.DictCode" resultMap="resultDetailMap">
+		select * from dict_code
+		<include refid="whereSql"/>
+	</select>
+	
+	<insert id="insert" parameterType="com.fsl.entity.DictCode">
+		insert into dict_code (dict_name,item_code,item_desc)
+		values(#{dictName},#{itemCode},#{itemDesc})
+		
+	</insert>
+
+	<update id="Update" parameterType="com.fsl.entity.DictCode">
+		update dict_code
+		<set> <!-- set会自动将最后一个语句的逗号删除掉 -->
+			<if test="dictName != null">
+				dict_name = #{dictName},
+			</if>
+			<if test="itemCode != null">
+				item_code = #{itemCode},
+			</if>
+			<if test="itemDesc != nul">
+				item_desc = #{itemDesc}
+			</if>
+		</set>
+		where id = #{id}
+	</update>
+
+	<!-- 添加或者更新 -->										<!-- 返回主键: useGeneratedKeys="true" keyProperty="dict_codeId" -->
+	<insert id="addOrUpdate" parameterType="com.fsl.entity.DictCode" useGeneratedKeys="true" keyProperty="id">
+		<if test="id == null">
+			insert into dict_code (dict_name,item_code,item_desc)
+			values (#{dictName},#{itemCode},#{itemDesc})
+		</if>
+		<if test="id != null">
+			update dict_code
+			<set>
+				<if test="dictName != null">
+					dict_name = #{dictName},
+				</if>
+				<if test="itemCode != null">
+					item_code = #{itemCode},
+				</if>
+				<if test="itemDesc != nul">
+					item_desc = #{itemDesc}
+				</if>
+			</set>
+			where id = #{id}
+		</if>
+	</insert>
+    
+</mapper>
+
+

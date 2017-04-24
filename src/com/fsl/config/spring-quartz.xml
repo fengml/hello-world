@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- 
+    	文件说明: 定时任务配置文件;
+     -->
+
+    <!-- 要执行任务的任务类。 -->
+    <bean id="testQuartz" class="com.fsl.quartz.TestJob"></bean>
+    <bean id="testQuartz2" class="com.fsl.quartz.TestJob2"></bean>
+
+    <!-- 将需要执行的定时任务注入JOB中。 -->
+    <bean id="testJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <!-- 定时任务需要执行的任务类 -->
+        <property name="targetObject" ref="testQuartz"></property>
+        <!-- 任务类中需要执行的方法 -->
+        <property name="targetMethod" value="doSomething"></property>
+        <!-- 上一次未执行完成的，要等待有再执行。 -->
+        <property name="concurrent" value="false"></property>
+    </bean>
+    <bean id="testJob2" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <!-- 定时任务需要执行的任务类 -->
+        <property name="targetObject" ref="testQuartz2"></property>
+        <!-- 任务类中需要执行的方法 -->
+        <property name="targetMethod" value="doSomething"></property>
+        <!-- 上一次未执行完成的，要等待有再执行。 -->
+        <property name="concurrent" value="false"></property>
+    </bean>
+
+    <!-- 基本的定时器，会绑定具体的任务。 -->
+    <bean id="testTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+        <property name="jobDetail" ref="testJob"></property>
+        <property name="startDelay" value="3000"></property>     <!-- 启动程序3秒后,开始执行 -->
+        <property name="repeatInterval" value="60000"></property><!-- 下一次执行时间间隔 --> 
+    </bean>
+    
+    <!-- 指定任务触发时间 -->  
+    <!-- 
+    	使用Spring配置管理Quartz的时候会遇到下面的异常:
+    	Caused by: java.lang.IncompatibleClassChangeError: class org.springframework.scheduling.quartz.CronTriggerBean has interface org.quartz.CronTrigger as super class  
+    	原因是Spring 3.0版本中内置的Quartz版本是<2.0的，在使用最新的Quartz包(>2.0)之后，接口不兼容
+    	解决方法:http://www.cnblogs.com/interdrp/p/3587221.html;
+     -->
+    <bean id="quartzTaskTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">  
+        <property name="jobDetail" ref="testJob2" />  
+        <property name="cronExpression" value="0 2 15 * * ?" />  <!--  每天15点02分触发   -->
+    </bean>
+
+	<!-- 装载调度器,容器启动时开始执行 -->
+    <bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="triggers">
+            <list>
+            	<!-- 基本的定时器 -->
+                <ref bean="testTrigger"></ref>
+                
+                <!-- 指定任务触发时间 -->  
+                <ref bean="quartzTaskTrigger"></ref>
+            </list>
+        </property>
+    </bean>
+    
+    
+    
+    <!-- <bean name="quartzScheduler"  
+        class="org.springframework.scheduling.quartz.SchedulerFactoryBean">  
+        <property name="dataSource">  
+            <ref bean="dbcp" />  
+        </property>  
+        <property name="applicationContextSchedulerContextKey" value="applicationContextKey" />  
+        <property name="configLocation" value="classpath:quartz.properties" />  
+    </bean>  
+  
+    <bean id="jobDetail" class="org.springframework.scheduling.quartz.JobDetailFactoryBean">  
+        <property name="jobClass">  
+            <value>com.sundoctor.example.service.MyQuartzJobBean</value>  
+        </property>     
+        <property name="durability" value="true" />     
+    </bean> -->
+    
+</beans>
